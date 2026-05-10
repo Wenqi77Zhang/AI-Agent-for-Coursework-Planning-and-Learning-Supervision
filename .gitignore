@@ -4,3 +4,9 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 member2_private_notes/
+
+
+.idea/
+.ipynb_checkpoints/
+README_EN.md
+README_ZH.md

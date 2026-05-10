@@ -2,5 +2,3 @@ Priority,Focus,Reason
 P1,End-to-end runnable demo,The assignment assesses working implementation and clear demonstration.
 P2,"Coverage of Perceive, Reason, Action, and Learn",The four-stage agentic loop is a core deliverable.
 P3,"Responsible AI, human oversight, logging, and evaluation",Responsible Agentic AI is worth 25% and supports bonus evidence.
-P4,Keep bonus features lightweight,Prioritise credible evidence over broad unfinished scope.
-P5,Use observability and evaluation as practical bonus features,"They can be demonstrated through logs, test cases, and reports."
