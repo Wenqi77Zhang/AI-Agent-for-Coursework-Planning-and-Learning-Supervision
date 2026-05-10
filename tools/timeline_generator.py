@@ -1,46 +1,61 @@
 import os
-from typing import List, Dict
+from datetime import date, timedelta
+from typing import Dict, List
+
 
 class TimelineGenerator:
     """
     Tool suite for generating visual project timelines and schedules.
     """
 
-    def generate_markdown_timeline_with_gantt(self, plan_data: List[Dict[str, str]], output_path: str = "outputs/project_plan.md") -> str:
+    def generate_markdown_timeline_with_gantt(
+        self,
+        plan_data: List[Dict[str, str]],
+        output_path: str = "outputs/project_plan.md",
+    ) -> str:
         """
-        Generates a Markdown document containing a project schedule and a visual Mermaid Gantt chart.
-        Stores the generated file externally to avoid returning large responses that could swamp the LLM context.
+        Generate a Markdown timeline and Mermaid Gantt chart from planner tasks.
 
-        Args:
-            plan_data: A list of dictionaries containing the schedule. Expected keys for each dictionary include:
-                'day': The specific day or date identifier for the task.
-                'task': A clear description of the development task.
-            output_path: The file path destination for the generated document. Defaults to 'outputs/project_plan.md'.
-
-        Returns:
-            A short string representing the file path to the successfully generated Markdown document.
-
-        Example return value:
-            'outputs/project_plan.md'
+        Supports both Member 3 mock tasks with day/task fields and Member 2
+        PlannerAgent tasks with id/stage/task/owner/priority/output fields.
         """
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        md_content = "# 📅 CA6123 AssignmentPilot Project Timeline\n\n"
-        md_content += "## 📊 Visual Progress (Mermaid Gantt)\n"
+
+        start_date = date(2026, 5, 5)
+
+        md_content = "# CA6123 AssignmentPilot Project Timeline\n\n"
+        md_content += "## Visual Progress (Mermaid Gantt)\n"
         md_content += "```mermaid\ngantt\n    title Project Development Timeline\n    dateFormat  YYYY-MM-DD\n"
-        
-        for i, task in enumerate(plan_data):
-            day_label = task.get("day", f"Day {i+1}")
-            task_desc = task.get("task", "Unnamed Task")
-            md_content += f"    {task_desc} :a{i}, 2026-05-0{i+5}, 1d\n"
+
+        current_section = None
+        for index, task in enumerate(plan_data):
+            phase = task.get("stage") or task.get("day") or task.get("id") or f"Phase {index + 1}"
+            task_desc = self._clean_mermaid_label(task.get("task", "Unnamed Task"))
+            task_date = start_date + timedelta(days=index)
+
+            if phase != current_section:
+                md_content += f"    section {self._clean_mermaid_label(phase)}\n"
+                current_section = phase
+
+            md_content += f"    {task_desc} :a{index}, {task_date.isoformat()}, 1d\n"
+
         md_content += "```\n\n"
-        
-        md_content += "## 📋 Detailed Schedule\n"
-        md_content += "| Phase | Core Task Description |\n|---|---|\n"
-        for task in plan_data:
-            md_content += f"| **{task.get('day', '')}** | {task.get('task', '')} |\n"
-            
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(md_content)
-            
+
+        md_content += "## Detailed Schedule\n"
+        md_content += "| Phase | Owner | Priority | Core Task Description | Output |\n"
+        md_content += "|---|---|---|---|---|\n"
+        for index, task in enumerate(plan_data):
+            phase = task.get("stage") or task.get("day") or task.get("id") or f"Phase {index + 1}"
+            owner = task.get("owner", "")
+            priority = task.get("priority", "")
+            task_desc = task.get("task", "")
+            output = task.get("output", "")
+            md_content += f"| **{phase}** | {owner} | {priority} | {task_desc} | {output} |\n"
+
+        with open(output_path, "w", encoding="utf-8") as file:
+            file.write(md_content)
+
         return output_path
+
+    def _clean_mermaid_label(self, value: str) -> str:
+        return str(value).replace(":", " -").replace("|", "-").replace("\n", " ").strip()
